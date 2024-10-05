@@ -44,13 +44,11 @@ def setup_webdriver() -> webdriver.Chrome:
         options.add_argument("--window-position=-2400,-2400")  # temporarily
     driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=options)
     logger.info(f"Webdriver setup completed successfully with headless mode: {'--headless' in options.arguments}")
-    print(type(driver))
     return driver
 
 
 # Executes a click event using JavaScript on a given WebElement
 def click_js(driver: webdriver.Chrome, btn: WebElement) -> None:
-    print(type(btn))
     try:
         driver.execute_script("arguments[0].click();", btn)
     except Exception as e:
