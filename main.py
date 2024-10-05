@@ -1,6 +1,7 @@
 import os
 import sys
 import time
+import shutil
 from datetime import datetime
 
 # dotenv for environment variable management
@@ -25,7 +26,10 @@ import logging
 import smtplib
 
 # Timeout duration for Selenium wait operations (in seconds)
-TIMEOUT = 15
+TIMEOUT: int = 15
+
+# Path to locally installed chromedriver
+PATH_TO_CHROMEDRIVER: str = '/usr/bin/chromedriver' # If webdriver-manager doesn't work on your system install chromedriver manually and change this path
 
 
 # Sets up the Chrome WebDriver with custom options and preferences
@@ -39,15 +43,38 @@ def setup_webdriver() -> webdriver.Chrome:
                    "profile.password_manager_enabled": False}
     options.add_experimental_option("prefs", preferences)
     options.add_argument("--mute-audio")
+
     if HEADLESS:
         options.add_argument("--headless")
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-gpu")
         options.add_argument("--autoplay-policy=no-user-gesture-required")
         options.add_argument("--window-position=-2400,-2400")  # temporarily
-    service = ChromeService(ChromeDriverManager().install())
-    driver = webdriver.Chrome(service=service, options=options)
-    logger.info(f"Webdriver setup completed successfully with headless mode: {'--headless' in options.arguments}")
+
+    try:
+        service = ChromeService(ChromeDriverManager().install())
+        driver = webdriver.Chrome(service=service, options=options)
+    except Exception as e:
+        logger.error(f"Failed to setup WebDriver: {e}")
+
+        wdm_directory = None
+        if sys.platform.startswith('linux'):
+            wdm_directory = os.path.expanduser('~/.wdm')
+        elif sys.platform.startswith('win'):
+            wdm_directory = os.path.join(os.getenv('USERPROFILE'), '.wdm')
+        else:
+            logger.error("Unsupported OS, unable to remove .wdm directory.")
+
+        # Remove the entire .wdm directory if it exists
+        if wdm_directory and os.path.exists(wdm_directory):
+            shutil.rmtree(wdm_directory)
+            logger.info(f"Removed the entire .wdm (webdriver-manager) directory: {wdm_directory}")
+
+        service = ChromeService(PATH_TO_CHROMEDRIVER)
+        driver = webdriver.Chrome(service=service, options=options)
+        logger.info("Using the local ChromeDriver.")
+
+    logger.info(f"WebDriver setup completed successfully with headless mode: {'--headless' in options.arguments}")
     return driver
 
 
