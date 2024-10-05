@@ -42,7 +42,8 @@ def setup_webdriver() -> webdriver.Chrome:
     if HEADLESS:
         options.add_argument("--headless")
         options.add_argument("--window-position=-2400,-2400")  # temporarily
-    driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=options)
+    service = ChromeService(ChromeDriverManager().install())
+    driver = webdriver.Chrome(service=service, options=options)
     logger.info(f"Webdriver setup completed successfully with headless mode: {'--headless' in options.arguments}")
     return driver
 
