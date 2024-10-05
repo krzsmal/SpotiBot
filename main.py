@@ -41,6 +41,9 @@ def setup_webdriver() -> webdriver.Chrome:
     options.add_argument("--mute-audio")
     if HEADLESS:
         options.add_argument("--headless")
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-gpu")
+        options.add_argument("--autoplay-policy=no-user-gesture-required")
         options.add_argument("--window-position=-2400,-2400")  # temporarily
     service = ChromeService(ChromeDriverManager().install())
     driver = webdriver.Chrome(service=service, options=options)
