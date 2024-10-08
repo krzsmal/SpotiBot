@@ -29,7 +29,7 @@ import smtplib
 TIMEOUT: int = 15
 
 # Path to locally installed chromedriver
-PATH_TO_CHROMEDRIVER: str = '/usr/bin/chromedriver' # If webdriver-manager doesn't work on your system install chromedriver manually and change this path
+PATH_TO_CHROMEDRIVER: str = '/usr/bin/chromedriver'  # If webdriver-manager doesn't work on your system install chromedriver manually and change this path
 
 
 # Sets up the Chrome WebDriver with custom options and preferences
@@ -137,7 +137,6 @@ def change_language(driver: webdriver.Chrome) -> None:
 
 # Sets the shuffle state of the playlist based on the new_state parameter
 def set_shuffle(driver: webdriver.Chrome, btn: WebElement, new_state: bool) -> None:
-    # shuffle_btn = wait_for_element(driver, By.XPATH, '//*[@data-testid="control-button-shuffle"]', TIMEOUT)
     current_state = btn.get_attribute('aria-checked')
     if new_state != str2bool(current_state):
         click_js(driver, btn)
@@ -145,13 +144,11 @@ def set_shuffle(driver: webdriver.Chrome, btn: WebElement, new_state: bool) -> N
 
 # Retrieves the current playing state (playing or paused)
 def get_playing_state(driver: webdriver.Chrome, btn: WebElement) -> bool:
-    # play_pause_btn = wait_for_element(driver, By.XPATH, '//*[@data-testid="control-button-playpause"]', TIMEOUT)
     return btn.get_attribute('aria-label') == "Pause"
 
 
 # Toggles the play/pause state of the Spotify playlist.
 def play_pause(driver: webdriver.Chrome, btn: WebElement) -> None:
-    # play_pause_btn = wait_for_element(driver, By.XPATH, '//div[@data-testid="action-bar-row"]//button[@data-testid="play-button"]', TIMEOUT)
     click_js(driver, btn)
 
 
@@ -209,7 +206,7 @@ if __name__ == '__main__':
         time.sleep(10)
         web_driver.get(PLAYLIST_LINK)
         time.sleep(10)
-        
+
         playlist_play_pause_btn = wait_for_element(web_driver, By.XPATH, '//div[@data-testid="action-bar-row"]//button[@data-testid="play-button"]', TIMEOUT)
         play_pause_btn = wait_for_element(web_driver, By.XPATH, '//*[@data-testid="control-button-playpause"]', TIMEOUT)
         shuffle_btn = wait_for_element(web_driver, By.XPATH, '//*[@data-testid="control-button-shuffle"]', TIMEOUT)
