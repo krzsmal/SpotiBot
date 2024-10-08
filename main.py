@@ -43,12 +43,12 @@ def setup_webdriver() -> webdriver.Chrome:
                    "profile.password_manager_enabled": False}
     options.add_experimental_option("prefs", preferences)
     options.add_argument("--mute-audio")
+    options.add_argument("--autoplay-policy=no-user-gesture-required")
 
     if HEADLESS:
         options.add_argument("--headless")
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-gpu")
-        options.add_argument("--autoplay-policy=no-user-gesture-required")
         options.add_argument("--window-position=-2400,-2400")  # temporarily
 
     try:
