@@ -136,10 +136,11 @@ def change_language(driver: webdriver.Chrome) -> None:
 
 
 # Sets the shuffle state of the playlist based on the new_state parameter
-def set_shuffle(driver: webdriver.Chrome, btn: WebElement, new_state: bool) -> None:
-    current_state = btn.get_attribute('aria-checked')
+def set_shuffle(driver: webdriver.Chrome, new_state: bool) -> None:
+    shuffle_btn = wait_for_element(web_driver, By.XPATH, '//*[@data-testid="control-button-shuffle"]', TIMEOUT)
+    current_state = shuffle_btn.get_attribute('aria-checked')
     if new_state != str2bool(current_state):
-        click_js(driver, btn)
+        click_js(driver, shuffle_btn)
 
 
 # Retrieves the current playing state (playing or paused)
@@ -148,8 +149,11 @@ def get_playing_state(driver: webdriver.Chrome, btn: WebElement) -> bool:
 
 
 # Toggles the play/pause state of the Spotify playlist.
-def play_pause(driver: webdriver.Chrome, btn: WebElement) -> None:
-    click_js(driver, btn)
+def play_pause(driver: webdriver.Chrome, playlist_pp_btn: WebElement, pp_btn: WebElement, play: bool) -> None:
+    while get_playing_state(driver, pp_btn) != play:
+        click_js(driver, playlist_pp_btn)
+        if get_playing_state(driver, pp_btn) != play:
+            time.sleep(3)
 
 
 # Checks if Spotify is being played on another device
@@ -209,19 +213,18 @@ if __name__ == '__main__':
 
         playlist_play_pause_btn = wait_for_element(web_driver, By.XPATH, '//div[@data-testid="action-bar-row"]//button[@data-testid="play-button"]', TIMEOUT)
         play_pause_btn = wait_for_element(web_driver, By.XPATH, '//*[@data-testid="control-button-playpause"]', TIMEOUT)
-        shuffle_btn = wait_for_element(web_driver, By.XPATH, '//*[@data-testid="control-button-shuffle"]', TIMEOUT)
 
         while True:
             current_playing_state = get_playing_state(web_driver, play_pause_btn)
             if START_HOUR <= datetime.now().hour <= END_HOUR:
                 if not other_device(web_driver) and not current_playing_state:
-                    play_pause(web_driver, playlist_play_pause_btn)
-                    set_shuffle(web_driver, shuffle_btn, SHUFFLE)
+                    play_pause(web_driver, playlist_play_pause_btn, play_pause_btn, True)
+                    set_shuffle(web_driver, SHUFFLE)
                     logger.info("Started to play the playlist")
                 time.sleep(60)  # 300
             else:
                 if not other_device(web_driver) and current_playing_state:
-                    play_pause(web_driver, playlist_play_pause_btn)
+                    play_pause(web_driver, playlist_play_pause_btn, play_pause_btn, False)
                     logger.info("Stopped playing")
                 time.sleep(900)
 
