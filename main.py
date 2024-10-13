@@ -76,19 +76,45 @@ class SpotiBot:
     def setup_webdriver(self) -> webdriver.Chrome:
         options = webdriver.ChromeOptions()
         # options.add_experimental_option("detach", True)  # keep browser open
-        options.add_experimental_option("useAutomationExtension", False)
-        options.add_experimental_option("excludeSwitches", ["enable-automation"])
-        options.add_argument("--disable-search-engine-choice-screen")
         preferences = {"credentials_enable_service": False,
                        "profile.password_manager_enabled": False}
+        options.add_experimental_option("useAutomationExtension", False)
+        options.add_experimental_option("excludeSwitches", ["enable-automation"])
         options.add_experimental_option("prefs", preferences)
-        options.add_argument("--mute-audio")
-        options.add_argument("--autoplay-policy=no-user-gesture-required")
+        flags = [
+            "--disable-search-engine-choice-screen",
+            "--mute-audio",
+            "--autoplay-policy=no-user-gesture-required",
+            "--no-sandbox",
+            "--blink-settings=imagesEnabled=false",
+            "--disable-extensions",
+            "--blink-settings=cssEnabled=false",
+            "--disable-webgl",
+            "--disable-plugins",
+            "--log-level=3",
+            "--disable-dev-shm-usage",
+            "--disable-renderer-backgrounding",
+            "--disable-background-timer-throttling",
+            "--disable-backgrounding-occluded-windows",
+            "--disable-client-side-phishing-detection",
+            "--disable-crash-reporter",
+            "--disable-oopr-debug-crash-dump",
+            "--no-crash-upload",
+            "--disable-gpu",
+            "--disable-low-res-tiling",
+            "--silent",
+            "--disable-infobars",
+            "--disable-browser-side-navigation",
+            "--disable-features=NetworkService",
+            "--dns-prefetch-disable"
+        ]
+        for flag in flags:
+            options.add_argument(flag)
 
         if self.HEADLESS:
             options.add_argument("--headless")
-            options.add_argument("--no-sandbox")
             options.add_argument("--disable-gpu")
+            options.add_argument("--window-size=800,600")
             options.add_argument("--window-position=-2400,-2400")
 
         try:
