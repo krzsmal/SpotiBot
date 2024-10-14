@@ -2,6 +2,7 @@ import os
 import sys
 import time
 import shutil
+import pickle
 from datetime import datetime
 
 # dotenv for environment variable management
@@ -140,8 +141,7 @@ class SpotiBot:
             driver = webdriver.Chrome(service=service, options=options)
             self.logger.info("Using the local ChromeDriver.")
 
-        self.logger.info(
-            f"WebDriver setup completed successfully with headless mode: {'--headless' in options.arguments}")
+        self.logger.info(f"WebDriver setup completed successfully with headless mode: {'--headless' in options.arguments}")
         return driver
 
     # Executes a click event using JavaScript on a given WebElement
@@ -153,15 +153,12 @@ class SpotiBot:
             sys.exit(1)
 
     # Waits for an element to be clickable within a given timeout period
-    def wait_for_element(self, by: str, element_identifier: str, timeout: int,
-                         error_txt: str = "") -> WebElement:
+    def wait_for_element(self, by: str, element_identifier: str, timeout: int, error_txt: str = "") -> WebElement:
         try:
-            element = WebDriverWait(self.driver, timeout).until(
-                EC.element_to_be_clickable((by, element_identifier)))
+            element = WebDriverWait(self.driver, timeout).until(EC.element_to_be_clickable((by, element_identifier)))
             return element
         except TimeoutException:
-            self.logger.error(f"TimeoutException - Couldn't find element with {by}: {element_identifier} {error_txt}",
-                              exc_info=True)
+            self.logger.error(f"TimeoutException - Couldn't find element with {by}: {element_identifier} {error_txt}", exc_info=True)
             sys.exit(1)
 
     # Accepts cookies by clicking the corresponding button on the webpage
@@ -227,11 +224,42 @@ class SpotiBot:
         except TimeoutException:
             return False
 
+    # Saves cookies to a file
+    def save_cookies(self) -> None:
+        cookies = self.driver.get_cookies()
+        with open('cookies.pkl', 'wb') as file:
+            pickle.dump(cookies, file)
+        self.logger.info(f"Saved cookies successfully")
+
+    # Loads cookies from a file or login if cookies are invalid or don't exists
+    def load_cookies(self) -> None:
+        new_cookies = False
+        if os.path.exists('cookies.pkl'):
+            with open('cookies.pkl', 'rb') as file:
+                cookies = pickle.load(file)
+                for cookie in cookies:
+                    self.driver.add_cookie(cookie)
+            self.driver.refresh()
+
+        time.sleep(10)
+        if len(self.driver.find_elements(By.ID, 'onetrust-accept-btn-handler')) != 0:
+            self.accept_cookies()
+            new_cookies = True
+        if self.driver.find_elements(By.ID, 'desktop.settings.selectLanguage')[0].get_attribute("value") != 'en-GB':
+            self.change_language()
+            new_cookies = True
+        if len(self.driver.find_elements(By.XPATH, '//*[@data-testid="login-button"]')) != 0:
+            self.login()
+            new_cookies = True
+        if new_cookies:
+            time.sleep(10)
+            self.save_cookies()
+        else:
+            self.logger.info(f"Loaded cookies successfully")
+
     def run(self):
         self.driver.get("https://open.spotify.com/preferences")
-        self.accept_cookies()
-        self.change_language()
-        self.login()
+        self.load_cookies()
         time.sleep(10)
         self.driver.get(self.PLAYLIST_LINK)
         time.sleep(10)
