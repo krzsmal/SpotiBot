@@ -41,6 +41,8 @@ class SpotiBot:
         self.playlist_play_pause_btn: WebElement | None = None
         self.play_pause_btn: WebElement | None = None
         self.skip_btn: WebElement | None = None
+        self.shuffle_btn: WebElement | None = None
+        self.repeat_btn: WebElement | None = None
         self.use_local_chromedriver: bool = False
 
         # Load environment variables
@@ -192,16 +194,19 @@ class SpotiBot:
         self.logger.info("Language preference has been set to English.")
         self.driver.refresh()
 
+    # Clicks a button and waits for the 'aria-checked' attribute to reflect the expected state.
+    def click_and_wait_aria_checked(self, btn: WebElement, expected_state: str) -> None:
+        self.click_element_with_js(btn)
+        try:
+            WebDriverWait(self.driver, 10).until(lambda driver: expected_state.capitalize() == self.repeat_btn.get_attribute('aria-checked').capitalize())
+        except TimeoutException:
+            pass
+
     # Toggles the shuffle button
     def toggle_shuffle(self) -> None:
-        shuffle_btn = self.wait_for_element(By.XPATH, '//*[@data-testid="control-button-shuffle"]', TIMEOUT)
-        current_state = shuffle_btn.get_attribute('aria-checked')
+        current_state = self.shuffle_btn.get_attribute('aria-checked')
         if self.SHUFFLE != self.string_to_bool(current_state):
-            self.click_element_with_js(shuffle_btn)
-            try:
-                WebDriverWait(self.driver, 10).until(lambda driver: self.SHUFFLE == self.string_to_bool(shuffle_btn.get_attribute('aria-checked')))
-            except TimeoutException:
-                pass
+            self.click_and_wait_aria_checked(self.shuffle_btn, str(self.SHUFFLE))
 
     # Checks if music is playing
     def is_music_playing(self) -> bool:
@@ -213,6 +218,15 @@ class SpotiBot:
             self.click_element_with_js(self.playlist_play_pause_btn)
             if self.is_music_playing() != play:
                 time.sleep(3)
+
+    # Enables the repeat button if not already activated
+    def enable_repeat(self) -> None:
+        current_state = self.repeat_btn.get_attribute('aria-checked')
+        if current_state == 'false':
+            self.click_and_wait_aria_checked(self.repeat_btn, 'true')
+        elif current_state == 'mixed':
+            self.click_and_wait_aria_checked(self.repeat_btn, 'false')
+            self.click_and_wait_aria_checked(self.repeat_btn, 'true')
 
     # Skips a song
     def skip_track(self) -> None:
@@ -266,6 +280,8 @@ class SpotiBot:
         self.playlist_play_pause_btn = self.wait_for_element(By.XPATH, '//div[@data-testid="action-bar-row"]//button[@data-testid="play-button"]', TIMEOUT)
         self.play_pause_btn = self.wait_for_element(By.XPATH, '//*[@data-testid="control-button-playpause"]', TIMEOUT)
         self.skip_btn = self.wait_for_element(By.XPATH, '//*[@data-testid="control-button-skip-forward"]', TIMEOUT)
+        self.shuffle_btn = self.wait_for_element(By.XPATH, '//*[@data-testid="control-button-shuffle"]', TIMEOUT)
+        self.repeat_btn = self.wait_for_element(By.XPATH, '//*[@data-testid="control-button-repeat"]', TIMEOUT)
 
     # Checks if WebDriver is active
     def is_driver_active(self):
@@ -282,6 +298,7 @@ class SpotiBot:
 
                 if not self.is_playing_on_another_device() and not self.is_music_playing():
                     self.toggle_play_pause(True)
+                    self.enable_repeat()
                     self.toggle_shuffle()
                     if self.SHUFFLE:
                         self.skip_track()
