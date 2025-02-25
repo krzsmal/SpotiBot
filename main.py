@@ -102,7 +102,6 @@ class SpotiBot:
             "--mute-audio",
             "--autoplay-policy=no-user-gesture-required",
             "--no-sandbox",
-            "--blink-settings=imagesEnabled=false",
             "--disable-extensions",
             "--disable-webgl",
             "--disable-dev-shm-usage",
